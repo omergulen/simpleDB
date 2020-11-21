@@ -12,7 +12,6 @@ public class SectionInfo {
 		System.out.print("Enter a section number: ");
 		int sectionNumber = input.nextInt();
 
-		// closing the scanner object
 		input.close();
 
 		String url = "jdbc:simpledb://localhost";
