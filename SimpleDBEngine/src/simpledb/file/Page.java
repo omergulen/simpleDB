@@ -53,18 +53,34 @@ public class Page {
 	}
 
 	public String getString(int offset) {
-		byte[] b = getBytes(offset);
-		return new String(b, CHARSET);
+		bb.position(offset);
+
+		String s = "";
+		char c;
+
+		while ((c = bb.getChar()) != '\0') {
+			s += c;
+		}
+
+		return s;
 	}
 
 	public void setString(int offset, String s) {
-		byte[] b = s.getBytes(CHARSET);
-		setBytes(offset, b);
+		int maxLength = maxLength(s.length());
+		if (bb.capacity() - maxLength < offset) {
+			System.out.println("The string " + s + " does not fit at location " + offset + " of the page.");
+		} else {
+			char[] chars = s.toCharArray();
+			bb.position(offset);
+			for (char c : chars) {
+				bb.putChar(c);
+			}
+			bb.putChar('\0');
+		}
 	}
 
 	public static int maxLength(int strlen) {
-		float bytesPerChar = CHARSET.newEncoder().maxBytesPerChar();
-		return Integer.BYTES + (strlen * (int) bytesPerChar);
+		return (strlen * 2) + 2;
 	}
 
 	// a package private method, needed by FileMgr
