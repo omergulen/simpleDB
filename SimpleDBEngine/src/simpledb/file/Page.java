@@ -17,14 +17,21 @@ public class Page {
 		bb = ByteBuffer.wrap(b);
 	}
 
+	// TODO :: Handle if offset can't have an integer.
 	public int getInt(int offset) {
 		return bb.getInt(offset);
 	}
 
 	public void setInt(int offset, int n) {
-		bb.putInt(offset, n);
+		if (bb.capacity() - 4 < offset) {
+			// Integer is 32 bit = 4 bytes
+			System.out.println("The integer " + n + " does not fit at location " + offset + " of the page.");
+		} else {
+			bb.putInt(offset, n);
+		}
 	}
 
+	// TODO :: Handle if offset can't have an bytes.
 	public byte[] getBytes(int offset) {
 		bb.position(offset);
 		int length = bb.getInt();
@@ -34,9 +41,15 @@ public class Page {
 	}
 
 	public void setBytes(int offset, byte[] b) {
-		bb.position(offset);
-		bb.putInt(b.length);
-		bb.put(b);
+		int maxLength = b.length + 4; // Integer is 32 bit = 4 bytes
+		if (bb.capacity() - maxLength < offset) {
+			String bytesStr = new String(b, StandardCharsets.UTF_8);
+			System.out.println("Bytes " + bytesStr + " does not fit at location " + offset + " of the page.");
+		} else {
+			bb.position(offset);
+			bb.putInt(b.length);
+			bb.put(b);
+		}
 	}
 
 	public String getString(int offset) {
