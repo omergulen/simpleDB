@@ -1,5 +1,11 @@
 package simpledb.buffer;
 
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import simpledb.file.*;
 import simpledb.log.LogMgr;
 
@@ -10,7 +16,8 @@ import simpledb.log.LogMgr;
  *
  */
 public class BufferMgr {
-	private Buffer[] bufferpool;
+	private List<Buffer> unpinnedBuffers;
+	private Map<BlockId, Buffer> allocatedBuffers;
 	private int numAvailable;
 	private static final long MAX_TIME = 10000; // 10 seconds
 
@@ -22,10 +29,12 @@ public class BufferMgr {
 	 * @param numbuffs the number of buffer slots to allocate
 	 */
 	public BufferMgr(FileMgr fm, LogMgr lm, int numbuffs) {
-		bufferpool = new Buffer[numbuffs];
+		unpinnedBuffers = new LinkedList<Buffer>();
+		allocatedBuffers = new HashMap<BlockId, Buffer>();
+
 		numAvailable = numbuffs;
 		for (int i = 0; i < numbuffs; i++)
-			bufferpool[i] = new Buffer(fm, lm);
+			unpinnedBuffers.add(new Buffer(fm, lm, i));
 	}
 
 	/**
@@ -43,7 +52,7 @@ public class BufferMgr {
 	 * @param txnum the transaction's id number
 	 */
 	public synchronized void flushAll(int txnum) {
-		for (Buffer buff : bufferpool)
+		for (Buffer buff : unpinnedBuffers)
 			if (buff.modifyingTx() == txnum)
 				buff.flush();
 	}
@@ -58,6 +67,7 @@ public class BufferMgr {
 		buff.unpin();
 		if (!buff.isPinned()) {
 			numAvailable++;
+			unpinnedBuffers.add(buff);
 			notifyAll();
 		}
 	}
@@ -86,6 +96,31 @@ public class BufferMgr {
 		}
 	}
 
+	public void printStatus() {
+		StringBuilder sb = new StringBuilder();
+
+		sb.append("Allocated buffers:\n");
+		for (Entry<BlockId, Buffer> entry: allocatedBuffers.entrySet()) {
+			sb.append("Buffer ");
+			sb.append(entry.getValue().getId());
+			sb.append(": ");
+			sb.append(entry.getKey());
+			if (entry.getValue().isPinned()) {
+				sb.append(" pinned\n");
+			} else {
+				sb.append(" unpinned\n");
+			}
+		}
+		
+		sb.append("Unpinned Buffers in LRU order:");
+		for (Buffer buffer: unpinnedBuffers) {
+			sb.append(" ");
+			sb.append(buffer.getId());
+		}
+		
+		System.out.println(sb.toString());
+	}
+
 	private boolean waitingTooLong(long starttime) {
 		return System.currentTimeMillis() - starttime > MAX_TIME;
 	}
@@ -105,27 +140,28 @@ public class BufferMgr {
 			buff = chooseUnpinnedBuffer();
 			if (buff == null)
 				return null;
+			BlockId oldBlock = buff.block();
+			if (oldBlock != null) {
+				allocatedBuffers.remove(buff.block());
+			}
 			buff.assignToBlock(blk);
 		}
 		if (!buff.isPinned())
 			numAvailable--;
 		buff.pin();
+		//unpinnedBuffers.remove(buff);
+		allocatedBuffers.put(blk, buff);
 		return buff;
 	}
 
 	private Buffer findExistingBuffer(BlockId blk) {
-		for (Buffer buff : bufferpool) {
-			BlockId b = buff.block();
-			if (b != null && b.equals(blk))
-				return buff;
-		}
-		return null;
+		return allocatedBuffers.get(blk);
 	}
 
 	private Buffer chooseUnpinnedBuffer() {
-		for (Buffer buff : bufferpool)
-			if (!buff.isPinned())
-				return buff;
+		if (numAvailable > 0) {
+			return unpinnedBuffers.remove(0);
+		}
 		return null;
 	}
 }

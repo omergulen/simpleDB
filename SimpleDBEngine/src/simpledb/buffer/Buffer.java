@@ -19,10 +19,12 @@ public class Buffer {
 	private int pins = 0;
 	private int txnum = -1;
 	private int lsn = -1;
+	private int id = -1;
 
-	public Buffer(FileMgr fm, LogMgr lm) {
+	public Buffer(FileMgr fm, LogMgr lm, int id) {
 		this.fm = fm;
 		this.lm = lm;
+		this.id = id;
 		contents = new Page(fm.blockSize());
 	}
 
@@ -37,6 +39,15 @@ public class Buffer {
 	 */
 	public BlockId block() {
 		return blk;
+	}
+	
+	/**
+	 * Returns the id of the buffer.
+	 * 
+	 * @return the id of the buffer.
+	 */
+	public int getId() {
+		return id;
 	}
 
 	public void setModified(int txnum, int lsn) {
