@@ -101,23 +101,31 @@ public class BufferMgr {
 
 		sb.append("Allocated buffers:\n");
 		for (Entry<BlockId, Buffer> entry: allocatedBuffers.entrySet()) {
-			sb.append("Buffer ");
-			sb.append(entry.getValue().getId());
-			sb.append(": ");
-			sb.append(entry.getKey());
-			if (entry.getValue().isPinned()) {
+			Buffer tmpBuffer = entry.getValue();
+			if (tmpBuffer.isPinned()) {
+				BlockId tmpBlock = entry.getKey();
+				sb.append("Buffer ");
+				sb.append(tmpBuffer.getId());
+				sb.append(": ");
+				sb.append(tmpBlock);
 				sb.append(" pinned\n");
-			} else {
-				sb.append(" unpinned\n");
 			}
 		}
 		
-		sb.append("Unpinned Buffers in LRU order:");
+		StringBuilder sb2 = new StringBuilder();
+		sb2.append("Unpinned Buffers in LRU order:");
 		for (Buffer buffer: unpinnedBuffers) {
-			sb.append(" ");
+			sb.append("Buffer ");
 			sb.append(buffer.getId());
+			sb.append(": ");
+			sb.append(buffer.block());
+			sb.append(" unpinned\n");
+			
+			sb2.append(" ");
+			sb2.append(buffer.getId());
 		}
-		
+
+		sb.append(sb2);
 		System.out.println(sb.toString());
 	}
 
