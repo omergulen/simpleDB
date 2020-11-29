@@ -99,6 +99,11 @@ public class BufferMgr {
 	public void printStatus() {
 		StringBuilder sb = new StringBuilder();
 
+		// First print blocks' allocated buffers
+		// Yet, there can be missing buffer since we keep blockIds as keys
+		// If the same block is allocated to another buffer, even if the old
+		// buffer keeps the block, the <BlockId, Buffer> map won't know about the old buffer
+		// To prevent duplications on the status printing, printing only the pinned buffers.
 		sb.append("Allocated buffers:\n");
 		for (Entry<BlockId, Buffer> entry: allocatedBuffers.entrySet()) {
 			Buffer tmpBuffer = entry.getValue();
@@ -112,6 +117,8 @@ public class BufferMgr {
 			}
 		}
 		
+		// Then, iterate through the unpinnedBuffers to print the buffers
+		// which are unpinned, in the end we will be printing all buffers' statuses.
 		StringBuilder sb2 = new StringBuilder();
 		sb2.append("Unpinned Buffers in LRU order:");
 		for (Buffer buffer: unpinnedBuffers) {
