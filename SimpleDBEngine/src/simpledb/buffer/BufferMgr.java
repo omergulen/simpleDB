@@ -164,13 +164,17 @@ public class BufferMgr {
 		if (!buff.isPinned())
 			numAvailable--;
 		buff.pin();
-		//unpinnedBuffers.remove(buff);
 		allocatedBuffers.put(blk, buff);
 		return buff;
 	}
 
 	private Buffer findExistingBuffer(BlockId blk) {
-		return allocatedBuffers.get(blk);
+		Buffer buff = allocatedBuffers.get(blk);
+		if (buff != null && buff.isPinned()) {
+			return buff;
+		}
+		
+		return null;
 	}
 
 	private Buffer chooseUnpinnedBuffer() {
