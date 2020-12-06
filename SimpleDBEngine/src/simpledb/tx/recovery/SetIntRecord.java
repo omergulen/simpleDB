@@ -47,6 +47,7 @@ public class SetIntRecord implements LogRecord {
 	 * @see simpledb.tx.recovery.LogRecord#undo(int)
 	 */
 	public void undo(Transaction tx) {
+		System.out.println("\t undoing record");
 		tx.pin(blk);
 		tx.setInt(blk, offset, val, false); // don't log the undo!
 		tx.unpin(blk);
