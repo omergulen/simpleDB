@@ -58,6 +58,12 @@ class LockTable {
 		}
 	}
 	
+	synchronized void unlock(BlockId blk) {		
+		if (removeLock(blk)) {
+			notifyAll();
+		}
+	}
+	
 	private void addLock(BlockId blk, int txid) {
 		List<Integer> blkLockList = locks.get(blk);
 		if (blkLockList == null) {
@@ -79,6 +85,11 @@ class LockTable {
 		}
 
 		return false;
+	}
+	
+	private boolean removeLock(BlockId blk) { 
+		locks.remove(blk);
+		return true;
 	}
 
 	private boolean shouldAbortThreadForSLock(BlockId blk, int txid) {
