@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import simpledb.file.Page;
+import simpledb.log.LogMgr;
 import simpledb.tx.Transaction;
 
 public class NQCheckpoint implements LogRecord {
@@ -35,5 +36,26 @@ public class NQCheckpoint implements LogRecord {
 
 	@Override
 	public void undo(Transaction tx) {}
+
+	/**
+	 * A static method to write a checkpoint record to the log. This log record
+	 * contains the NQCKPT operator, and active txids.
+	 * 
+	 * @return the LSN of the last log value
+	 */
+	public static int writeToLog(LogMgr lm, List<Integer> txs) {
+		int txCount = txs.size();
+		int totalCount = txCount + 2;
+		byte[] rec = new byte[totalCount * Integer.BYTES];
+		Page p = new Page(rec);
+		p.setInt(RECORD_TYPE_OFFSET, NQCKPT);
+		p.setInt(TX_COUNT_OFFSET, txCount);
+		for (int i = 0; i < txCount; i++) {
+			int txId = txs.get(i);
+			int offset = (i + 2) * Integer.BYTES;
+			p.setInt(offset, txId);
+		}
+		return lm.append(rec);
+	}
 
 }
