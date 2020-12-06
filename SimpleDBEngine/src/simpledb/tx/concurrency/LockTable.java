@@ -27,7 +27,7 @@ class LockTable {
 	 * 
 	 * @param blk a reference to the disk block
 	 */
-	public synchronized void sLock(BlockId blk) {
+	public synchronized void sLock(BlockId blk, int txid) {
 		try {
 			long timestamp = System.currentTimeMillis();
 			while (hasXlock(blk) && !waitingTooLong(timestamp))
@@ -49,7 +49,7 @@ class LockTable {
 	 * 
 	 * @param blk a reference to the disk block
 	 */
-	synchronized void xLock(BlockId blk) {
+	synchronized void xLock(BlockId blk, int txid) {
 		try {
 			long timestamp = System.currentTimeMillis();
 			while (hasOtherSLocks(blk) && !waitingTooLong(timestamp))
@@ -68,7 +68,7 @@ class LockTable {
 	 * 
 	 * @param blk a reference to the disk block
 	 */
-	synchronized void unlock(BlockId blk) {
+	synchronized void unlock(BlockId blk, int txid) {
 		int val = getLockVal(blk);
 		if (val > 1)
 			locks.put(blk, val - 1);
