@@ -37,6 +37,10 @@ public class NQCheckpoint implements LogRecord {
 	public void undo(Transaction tx) {
 	}
 
+	public List<Integer> getTxs() {
+		return txs;
+	}
+
 
 	/**
 	 * A static method to write a checkpoint record to the log. This log record
