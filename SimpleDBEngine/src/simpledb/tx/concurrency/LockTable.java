@@ -15,7 +15,6 @@ import simpledb.file.BlockId;
  * @author Edward Sciore
  */
 class LockTable {
-	private static final long MAX_TIME = 10000; // 10 seconds
 
 	private Map<BlockId, List<Integer>> locks = new HashMap<BlockId, List<Integer>>();
 
