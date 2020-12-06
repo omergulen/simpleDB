@@ -129,6 +129,7 @@ public class RecoveryMgr {
 		while (iter.hasNext()) {
 			byte[] bytes = iter.next();
 			LogRecord rec = LogRecord.createLogRecord(bytes);
+			System.out.println(rec);
 			if (rec.op() == CHECKPOINT)
 				return;
 			if (rec.op() == COMMIT || rec.op() == ROLLBACK)
@@ -144,6 +145,7 @@ public class RecoveryMgr {
 				while (iter.hasNext()) {
 					byte[] bytes2 = iter.next();
 					LogRecord rec2 = LogRecord.createLogRecord(bytes2);
+					System.out.println(rec2);
 					// No need to iterate further
 					if (rec2.txNumber() == earliestActiveTxId && rec2.op() == START) {
 						return;
