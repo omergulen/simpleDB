@@ -26,9 +26,9 @@ public class ConcurrencyMgr {
 	 * 
 	 * @param blk a reference to the disk block
 	 */
-	public void sLock(BlockId blk) {
+	public void sLock(BlockId blk, int txid) {
 		if (locks.get(blk) == null) {
-			locktbl.sLock(blk);
+			locktbl.sLock(blk, txid);
 			locks.put(blk, "S");
 		}
 	}
@@ -40,10 +40,10 @@ public class ConcurrencyMgr {
 	 * 
 	 * @param blk a reference to the disk block
 	 */
-	public void xLock(BlockId blk) {
+	public void xLock(BlockId blk, int txid) {
 		if (!hasXLock(blk)) {
-			sLock(blk);
-			locktbl.xLock(blk);
+			sLock(blk, txid);
+			locktbl.xLock(blk, txid);
 			locks.put(blk, "X");
 		}
 	}
