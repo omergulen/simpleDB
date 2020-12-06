@@ -50,6 +50,18 @@ public class RecoveryMgr {
 		lm.flush(lsn);
 	}
 
+	public void checkpoint(List<Integer> txs) {
+		StringBuilder sb = new StringBuilder();
+		for (Integer tx : txs) {
+			sb.append(" ");
+			sb.append(tx);
+		}
+		System.out.println("NQ CHECKPOINT: Transactions" + sb.toString() + " are still active");
+		bm.flushAll(txnum);
+		int lsn = NQCheckpoint.writeToLog(lm, txs);
+		lm.flush(lsn);
+	}
+
 	/**
 	 * Recover uncompleted transactions from the log and then write a quiescent
 	 * checkpoint record to the log and flush it.
