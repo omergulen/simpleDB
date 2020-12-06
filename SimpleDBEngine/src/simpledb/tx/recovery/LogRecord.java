@@ -9,7 +9,7 @@ import simpledb.tx.Transaction;
  * @author Edward Sciore
  */
 public interface LogRecord {
-	static final int CHECKPOINT = 0, START = 1, COMMIT = 2, ROLLBACK = 3, SETINT = 4, SETSTRING = 5;
+	static final int CHECKPOINT = 0, START = 1, COMMIT = 2, ROLLBACK = 3, SETINT = 4, SETSTRING = 5, NQCKPT = 6;
 
 	/**
 	 * Returns the log record's type.
@@ -54,6 +54,8 @@ public interface LogRecord {
 			return new SetIntRecord(p);
 		case SETSTRING:
 			return new SetStringRecord(p);
+		case NQCKPT:
+			return new NQCheckpoint();
 		default:
 			return null;
 		}
