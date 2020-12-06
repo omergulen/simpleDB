@@ -41,6 +41,16 @@ public class NQCheckpoint implements LogRecord {
 		return txs;
 	}
 
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("<NQCKPT ");
+		for (Integer tx : txs) {
+			sb.append(tx);
+			sb.append(" ");
+		}
+		sb.append(">");
+		return sb.toString();
+	}
 
 	/**
 	 * A static method to write a checkpoint record to the log. This log record
