@@ -34,8 +34,9 @@ public class NQCheckpoint implements LogRecord {
 		return -1; // dummy value
 	}
 
-	@Override
-	public void undo(Transaction tx) {}
+	public void undo(Transaction tx) {
+	}
+
 
 	/**
 	 * A static method to write a checkpoint record to the log. This log record
