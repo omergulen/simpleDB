@@ -133,7 +133,26 @@ public class RecoveryMgr {
 				return;
 			if (rec.op() == COMMIT || rec.op() == ROLLBACK)
 				finishedTxs.add(rec.txNumber());
-			else if (!finishedTxs.contains(rec.txNumber()))
+			else if (rec.op() == NQCKPT) {
+				List<Integer> activeTxs = ((NQCheckpoint) rec).getTxs();
+				// Remove finished transactions
+				activeTxs.removeAll(finishedTxs);
+
+				// Get first (earliest) txId
+				int earliestActiveTxId = activeTxs.get(0);
+
+				while (iter.hasNext()) {
+					byte[] bytes2 = iter.next();
+					LogRecord rec2 = LogRecord.createLogRecord(bytes2);
+					// No need to iterate further
+					if (rec2.txNumber() == earliestActiveTxId && rec2.op() == START) {
+						return;
+					}
+					if (activeTxs.contains(rec2.txNumber())) {
+						rec2.undo(tx);
+					}
+				}
+			} else if (!finishedTxs.contains(rec.txNumber()))
 				rec.undo(tx);
 		}
 	}
