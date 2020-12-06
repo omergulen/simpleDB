@@ -21,18 +21,17 @@ public class NQCheckpoint implements LogRecord {
 		}
 	}
 
-	@Override
 	public int op() {
 		return NQCKPT;
 	}
 
-   /**
-    * Checkpoint records have no associated transaction,
-    * and so the method returns a "dummy", negative txid.
-    */
-   public int txNumber() {
-      return -1; // dummy value
-   }
+	/**
+	 * Checkpoint records have no associated transaction, and so the method returns
+	 * a "dummy", negative txid.
+	 */
+	public int txNumber() {
+		return -1; // dummy value
+	}
 
 	@Override
 	public void undo(Transaction tx) {}
