@@ -27,16 +27,9 @@ class LockTable {
 	 * @param blk a reference to the disk block
 	 */
 	public synchronized void sLock(BlockId blk, int txid) {
-		try {
-			long timestamp = System.currentTimeMillis();
-			while (hasXlock(blk) && !waitingTooLong(timestamp))
-				wait(MAX_TIME);
-			if (hasXlock(blk))
-				throw new LockAbortException();
-			addLock(blk, txid);
-		} catch (InterruptedException e) {
+		if (shouldAbortThreadForSLock(blk, txid))
 			throw new LockAbortException();
-		}
+		addLock(blk, txid);
 	}
 
 	/**
@@ -48,16 +41,9 @@ class LockTable {
 	 * @param blk a reference to the disk block
 	 */
 	synchronized void xLock(BlockId blk, int txid) {
-		try {
-			long timestamp = System.currentTimeMillis();
-			while (hasOtherSLocks(blk) && !waitingTooLong(timestamp))
-				wait(MAX_TIME);
-			if (hasOtherSLocks(blk))
-				throw new LockAbortException();
-			addLock(blk, txid * -1);
-		} catch (InterruptedException e) {
+		if (shouldAbortThreadForXLock(blk, txid))
 			throw new LockAbortException();
-		}
+		addLock(blk, txid * -1);
 	}
 
 	/**
@@ -95,29 +81,33 @@ class LockTable {
 		return false;
 	}
 
-	private boolean hasXlock(BlockId blk) {
-		List<Integer> blkLockList = locks.get(blk);
-		for (Integer lock : blkLockList) {
-			if (lock < 0) {
-				return true;
-			}
-		}
-
-		return false;
+	private boolean shouldAbortThreadForSLock(BlockId blk, int txid) {
+		return shouldAbortThread(blk, txid, false);
 	}
-
-	private boolean hasOtherSLocks(BlockId blk) {
-		List<Integer> blkLockList = locks.get(blk);
-		for (Integer lock : blkLockList) {
-			if (lock > 0) {
-				return true;
-			}
-		}
-
-		return false;
+	
+	private boolean shouldAbortThreadForXLock(BlockId blk, int txid) {
+		return shouldAbortThread(blk, txid, true);
 	}
-
-	private boolean waitingTooLong(long starttime) {
-		return System.currentTimeMillis() - starttime > MAX_TIME;
+	
+	private boolean shouldAbortThread(BlockId blk, int txid, boolean xLock) {
+		List<Integer> blkLockList = locks.get(blk);
+		if (xLock) {
+			txid *= -1;
+			for (Integer txid2 : blkLockList) {
+				if (txid2 < 0 && txid2 > txid) {
+					return true;
+				}
+			}
+			
+			return false;
+		} else {
+			for (Integer txid2 : blkLockList) {
+				if (txid2 > 0 && txid2 < txid) {
+					return true;
+				}
+			}
+			
+			return false;
+		}
 	}
 }
