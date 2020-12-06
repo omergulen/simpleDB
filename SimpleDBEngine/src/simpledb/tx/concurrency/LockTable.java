@@ -17,7 +17,7 @@ import simpledb.file.BlockId;
 class LockTable {
 	private static final long MAX_TIME = 10000; // 10 seconds
 
-	private Map<BlockId, Integer> locks = new HashMap<BlockId, Integer>();
+	private Map<BlockId, List<Integer>> locks = new HashMap<BlockId, List<Integer>>();
 
 	/**
 	 * Grant an SLock on the specified block. If an XLock exists when the method is
@@ -34,8 +34,7 @@ class LockTable {
 				wait(MAX_TIME);
 			if (hasXlock(blk))
 				throw new LockAbortException();
-			int val = getLockVal(blk); // will not be negative
-			locks.put(blk, val + 1);
+			addLock(blk, txid);
 		} catch (InterruptedException e) {
 			throw new LockAbortException();
 		}
@@ -56,7 +55,7 @@ class LockTable {
 				wait(MAX_TIME);
 			if (hasOtherSLocks(blk))
 				throw new LockAbortException();
-			locks.put(blk, -1);
+			addLock(blk, txid * -1);
 		} catch (InterruptedException e) {
 			throw new LockAbortException();
 		}
@@ -68,30 +67,58 @@ class LockTable {
 	 * 
 	 * @param blk a reference to the disk block
 	 */
-	synchronized void unlock(BlockId blk, int txid) {
-		int val = getLockVal(blk);
-		if (val > 1)
-			locks.put(blk, val - 1);
-		else {
-			locks.remove(blk);
+	synchronized void unlock(BlockId blk, int txid) {		
+		if (removeLock(blk, txid)) {
 			notifyAll();
 		}
 	}
+	
+	private void addLock(BlockId blk, int txid) {
+		List<Integer> blkLockList = locks.get(blk);
+		if (blkLockList == null) {
+			blkLockList = new ArrayList<Integer>();
+			locks.put(blk, blkLockList);
+		}
+		blkLockList.add(txid);
+	}
+	
+	private boolean removeLock(BlockId blk, int txid) {
+		List<Integer> blkLockList = locks.get(blk);
+		if (blkLockList != null) {
+			blkLockList.remove(txid);
+		}
+
+		if (blkLockList == null || blkLockList.isEmpty()) {
+			locks.remove(blk);
+			return true;
+		}
+
+		return false;
+	}
 
 	private boolean hasXlock(BlockId blk) {
-		return getLockVal(blk) < 0;
+		List<Integer> blkLockList = locks.get(blk);
+		for (Integer lock : blkLockList) {
+			if (lock < 0) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	private boolean hasOtherSLocks(BlockId blk) {
-		return getLockVal(blk) > 1;
+		List<Integer> blkLockList = locks.get(blk);
+		for (Integer lock : blkLockList) {
+			if (lock > 0) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	private boolean waitingTooLong(long starttime) {
 		return System.currentTimeMillis() - starttime > MAX_TIME;
-	}
-
-	private int getLockVal(BlockId blk) {
-		Integer ival = locks.get(blk);
-		return (ival == null) ? 0 : ival.intValue();
 	}
 }
