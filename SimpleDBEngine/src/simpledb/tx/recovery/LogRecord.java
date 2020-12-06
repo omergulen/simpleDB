@@ -55,7 +55,7 @@ public interface LogRecord {
 		case SETSTRING:
 			return new SetStringRecord(p);
 		case NQCKPT:
-			return new NQCheckpoint();
+			return new NQCheckpoint(p);
 		default:
 			return null;
 		}
