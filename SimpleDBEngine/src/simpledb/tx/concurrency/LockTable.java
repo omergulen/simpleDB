@@ -120,8 +120,7 @@ class LockTable {
 		}
 
 		if (blkLockList == null || blkLockList.isEmpty()) {
-			locks.remove(blk);
-			return true;
+			return removeLock(blk);
 		}
 
 		return false;
