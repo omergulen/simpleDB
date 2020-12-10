@@ -20,11 +20,12 @@ class LockTable {
 
 	/**
 	 * Grant an SLock on the specified block. If an XLock exists when the method is
-	 * called, then the calling thread will be placed on a wait list until the lock
-	 * is released. If the thread remains on the wait list for a certain amount of
-	 * time (currently 10 seconds), then an exception is thrown.
+	 * called, if the calling thread is younger than the thread has XLock on the block
+	 * then an exception will be thrown. The calling thread (older) will wait until 
+	 * the lock is released.
 	 * 
 	 * @param blk a reference to the disk block
+	 * @param txid id of the transaction
 	 */
 	public synchronized void sLock(BlockId blk, int txid) {
 
@@ -42,11 +43,13 @@ class LockTable {
 
 	/**
 	 * Grant an XLock on the specified block. If a lock of any type exists when the
-	 * method is called, then the calling thread will be placed on a wait list until
-	 * the locks are released. If the thread remains on the wait list for a certain
-	 * amount of time (currently 10 seconds), then an exception is thrown.
+	 * method is called, if the calling thread is younger than the thread has XLock on the block
+	 * then an exception will be thrown. The calling thread (older) will wait until 
+	 * the lock is released.
 	 * 
 	 * @param blk a reference to the disk block
+	 * @param txid id of the transaction
+	 * 
 	 */
 	synchronized void xLock(BlockId blk, int txid) {
 		if (shouldAbortThreadForXLock(blk, txid))
@@ -67,6 +70,7 @@ class LockTable {
 	 * block, then the waiting transactions are notified.
 	 * 
 	 * @param blk a reference to the disk block
+	 * @param txid id of the transaction
 	 */
 	synchronized void unlock(BlockId blk, int txid) {
 		if (removeLock(blk, txid)) {
@@ -74,12 +78,26 @@ class LockTable {
 		}
 	}
 
+	/**
+	 * Release a lock on the specified block. If this lock is the last lock on that
+	 * block, then the waiting transactions are notified.
+	 * Overloading the original method for back compatibility.
+	 * 
+	 * @param blk a reference to the disk block
+	 */
 	synchronized void unlock(BlockId blk) {
 		if (removeLock(blk)) {
 			notifyAll();
 		}
 	}
 
+	/**
+	 * Private helper method to add locks on blocks.
+	 * If txid is negative, it is xLock.
+	 * 
+	 * @param blk a reference to the disk block
+	 * @param txid id of the transaction
+	 */
 	private void addLock(BlockId blk, int txid) {
 		List<Integer> blkLockList = locks.get(blk);
 		if (blkLockList == null) {
@@ -89,6 +107,12 @@ class LockTable {
 		blkLockList.add(txid);
 	}
 
+	/**
+	 * Private helper method to remove locks from blocks.
+	 * 
+	 * @param blk a reference to the disk block
+	 * @param txid id of the transaction
+	 */
 	private boolean removeLock(BlockId blk, int txid) {
 		List<Integer> blkLockList = locks.get(blk);
 		if (blkLockList != null) {
@@ -103,6 +127,12 @@ class LockTable {
 		return false;
 	}
 
+	/**
+	 * Private helper method to remove locks from blocks.
+	 * Overloading the original method for back compatibility.
+	 * 
+	 * @param blk a reference to the disk block
+	 */
 	private boolean removeLock(BlockId blk) {
 		locks.remove(blk);
 		return true;
