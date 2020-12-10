@@ -102,23 +102,17 @@ class LockTable {
 	
 	private boolean shouldAbortThread(BlockId blk, int txid, boolean xLock) {
 		List<Integer> blkLockList = locks.get(blk);
-		if (xLock) {
-			txid *= -1;
-			for (Integer txid2 : blkLockList) {
-				if (txid2 < 0 && txid2 > txid) {
-					return true;
-				}
-			}
-			
-			return false;
-		} else {
-			for (Integer txid2 : blkLockList) {
-				if (txid2 > 0 && txid2 < txid) {
-					return true;
-				}
-			}
-			
+		if (blkLockList == null) {
 			return false;
 		}
+
+		txid = Math.abs(txid);
+		for (Integer lockedTxid : blkLockList) {
+			if (((!xLock && lockedTxid < 0) || xLock) && Math.abs(lockedTxid) < txid) {
+				return true;
+			}
+		}
+		
+		return false;
 	}
 }
