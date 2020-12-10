@@ -28,7 +28,7 @@ class LockTable {
 	 */
 	public synchronized void sLock(BlockId blk, int txid) {
 
-		if (shouldAbortThread(blk, txid, false))
+		if (shouldAbortThreadForSLock(blk, txid))
 			throw new LockAbortException();
 
 		try {
@@ -49,7 +49,7 @@ class LockTable {
 	 * @param blk a reference to the disk block
 	 */
 	synchronized void xLock(BlockId blk, int txid) {
-		if (shouldAbortThread(blk, txid, true))
+		if (shouldAbortThreadForXLock(blk, txid))
 			throw new LockAbortException();
 
 		try {
@@ -122,6 +122,14 @@ class LockTable {
 		}
 
 		return false;
+	}
+
+	private boolean shouldAbortThreadForSLock(BlockId blk, int txid) {
+		return shouldAbortThread(blk, txid, false);
+	}
+
+	private boolean shouldAbortThreadForXLock(BlockId blk, int txid) {
+		return shouldAbortThread(blk, txid, true);
 	}
 
 	private boolean shouldAbortThread(BlockId blk, int txid, boolean xLock) {
