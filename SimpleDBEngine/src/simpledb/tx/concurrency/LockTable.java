@@ -27,8 +27,16 @@ class LockTable {
 	 * @param blk a reference to the disk block
 	 */
 	public synchronized void sLock(BlockId blk, int txid) {
-		if (shouldAbortThreadForSLock(blk, txid))
+
+		if (shouldAbortThread(blk, txid, false))
 			throw new LockAbortException();
+
+		try {
+			while (hasXlock(blk))
+				wait(Long.MAX_VALUE);
+		} catch (InterruptedException e) {
+			throw new LockAbortException();
+		}
 		addLock(blk, txid);
 	}
 
