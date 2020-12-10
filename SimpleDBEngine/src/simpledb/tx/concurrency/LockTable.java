@@ -91,15 +91,23 @@ class LockTable {
 		locks.remove(blk);
 		return true;
 	}
+	
+	private boolean hasXlock(BlockId blk) {
+		List<Integer> blkLockList = locks.get(blk);
+		
+		if (blkLockList == null) {			
+			return false;
+		}
 
-	private boolean shouldAbortThreadForSLock(BlockId blk, int txid) {
-		return shouldAbortThread(blk, txid, false);
+		for (Integer lock : blkLockList) {
+			if (lock < 0) {
+				return true;
+			}
+		}
+
+		return false;
 	}
-	
-	private boolean shouldAbortThreadForXLock(BlockId blk, int txid) {
-		return shouldAbortThread(blk, txid, true);
-	}
-	
+
 	private boolean shouldAbortThread(BlockId blk, int txid, boolean xLock) {
 		List<Integer> blkLockList = locks.get(blk);
 		if (blkLockList == null) {
