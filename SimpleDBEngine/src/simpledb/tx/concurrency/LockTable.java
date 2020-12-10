@@ -68,18 +68,18 @@ class LockTable {
 	 * 
 	 * @param blk a reference to the disk block
 	 */
-	synchronized void unlock(BlockId blk, int txid) {		
+	synchronized void unlock(BlockId blk, int txid) {
 		if (removeLock(blk, txid)) {
 			notifyAll();
 		}
 	}
-	
-	synchronized void unlock(BlockId blk) {		
+
+	synchronized void unlock(BlockId blk) {
 		if (removeLock(blk)) {
 			notifyAll();
 		}
 	}
-	
+
 	private void addLock(BlockId blk, int txid) {
 		List<Integer> blkLockList = locks.get(blk);
 		if (blkLockList == null) {
@@ -88,7 +88,7 @@ class LockTable {
 		}
 		blkLockList.add(txid);
 	}
-	
+
 	private boolean removeLock(BlockId blk, int txid) {
 		List<Integer> blkLockList = locks.get(blk);
 		if (blkLockList != null) {
@@ -102,16 +102,16 @@ class LockTable {
 
 		return false;
 	}
-	
-	private boolean removeLock(BlockId blk) { 
+
+	private boolean removeLock(BlockId blk) {
 		locks.remove(blk);
 		return true;
 	}
-	
+
 	private boolean hasXlock(BlockId blk) {
 		List<Integer> blkLockList = locks.get(blk);
-		
-		if (blkLockList == null) {			
+
+		if (blkLockList == null) {
 			return false;
 		}
 
@@ -144,7 +144,7 @@ class LockTable {
 				return true;
 			}
 		}
-		
+
 		return false;
 	}
 }
