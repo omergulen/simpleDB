@@ -126,6 +126,14 @@ public class TableScan implements UpdateScan {
 		return new RID(rp.block().number(), currentslot);
 	}
 
+	public boolean isNull(String fldname) {
+		return rp.isNull(currentslot, fldname);
+	}
+
+	public void setNull(String fldname) {
+		rp.setNull(currentslot, fldname);
+	}
+
 	// Private auxiliary methods
 
 	private void moveToBlock(int blknum, boolean reversed) {
