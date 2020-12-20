@@ -93,6 +93,10 @@ public class RecordPage {
 	public int nextAfter(int slot) {
 		return searchAfter(slot, USED);
 	}
+	
+	public int nextBefore(int slot) {
+		return searchBefore(slot, USED);
+	}
 
 	public int insertAfter(int slot) {
 		int newslot = searchAfter(slot, EMPTY);
@@ -103,6 +107,10 @@ public class RecordPage {
 
 	public BlockId block() {
 		return blk;
+	}
+	
+	public int slots() {
+		return tx.blockSize() / layout.slotSize();
 	}
 
 	// Private auxiliary methods
@@ -123,9 +131,19 @@ public class RecordPage {
 		}
 		return -1;
 	}
+	
+	private int searchBefore(int slot, int flag) {
+		slot--;
+		while(isValidSlot(slot)) {
+			if (tx.getInt(blk, offset(slot)) == flag)
+				return slot;
+			slot--;
+		}
+		return -1;
+	}
 
 	private boolean isValidSlot(int slot) {
-		return offset(slot + 1) <= tx.blockSize();
+		return slot > -1 && offset(slot + 1) <= tx.blockSize();
 	}
 
 	private int offset(int slot) {
