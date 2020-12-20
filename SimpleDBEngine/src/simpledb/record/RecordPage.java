@@ -53,6 +53,7 @@ public class RecordPage {
 	public void setInt(int slot, String fldname, int val) {
 		int fldpos = offset(slot) + layout.offset(fldname);
 		tx.setInt(blk, fldpos, val, true);
+		setNonNull(slot, fldname);
 	}
 
 	/**
@@ -64,6 +65,7 @@ public class RecordPage {
 	public void setString(int slot, String fldname, String val) {
 		int fldpos = offset(slot) + layout.offset(fldname);
 		tx.setString(blk, fldpos, val, true);
+		setNonNull(slot, fldname);
 	}
 
 	public void delete(int slot) {
@@ -85,6 +87,7 @@ public class RecordPage {
 					tx.setInt(blk, fldpos, 0, false);
 				else
 					tx.setString(blk, fldpos, "", false);
+				setNonNull(slot, fldname);
 			}
 			slot++;
 		}
@@ -93,7 +96,7 @@ public class RecordPage {
 	public int nextAfter(int slot) {
 		return searchAfter(slot, USED);
 	}
-	
+
 	public int nextBefore(int slot) {
 		return searchBefore(slot, USED);
 	}
@@ -108,9 +111,22 @@ public class RecordPage {
 	public BlockId block() {
 		return blk;
 	}
-	
+
 	public int slots() {
 		return tx.blockSize() / layout.slotSize();
+	}
+
+	public boolean isNull(int slot, String fldname) {
+		int bitPosition = layout.bitPosition(fldname);
+		return getBitVal(tx.getInt(blk, offset(slot)), bitPosition) == 1;
+	}
+
+	public void setNull(int slot, String fldname) {
+		setIsNull(slot, fldname, 1);
+	}
+	
+	public void setNonNull(int slot, String fldname) {
+		setIsNull(slot, fldname, 0);
 	}
 
 	// Private auxiliary methods
@@ -119,23 +135,35 @@ public class RecordPage {
 	 * Set the record's empty/inuse flag.
 	 */
 	private void setFlag(int slot, int flag) {
+		int oldFlag = tx.getInt(blk, offset(slot));
+		flag = setBitVal(oldFlag, 0, flag);
 		tx.setInt(blk, offset(slot), flag, true);
+	}
+	
+	private void setIsNull(int slot, String fldname, int isNull) {
+		int bitPosition = layout.bitPosition(fldname);
+		int newInt = setBitVal(tx.getInt(blk, offset(slot)), bitPosition, isNull);
+		tx.setInt(blk, offset(slot), newInt, false);
+	}
+
+	private boolean isEqualToFlag(int val, int flag) {
+		return getBitVal(val, 0) == flag;
 	}
 
 	private int searchAfter(int slot, int flag) {
 		slot++;
 		while (isValidSlot(slot)) {
-			if (tx.getInt(blk, offset(slot)) == flag)
+			if (isEqualToFlag(tx.getInt(blk, offset(slot)), flag))
 				return slot;
 			slot++;
 		}
 		return -1;
 	}
-	
+
 	private int searchBefore(int slot, int flag) {
 		slot--;
-		while(isValidSlot(slot)) {
-			if (tx.getInt(blk, offset(slot)) == flag)
+		while (isValidSlot(slot)) {
+			if (isEqualToFlag(tx.getInt(blk, offset(slot)), flag))
 				return slot;
 			slot--;
 		}
@@ -148,5 +176,18 @@ public class RecordPage {
 
 	private int offset(int slot) {
 		return slot * layout.slotSize();
+	}
+
+	private int getBitVal(int val, int bitpos) {
+		return (val >> bitpos) % 2;
+	}
+
+	private int setBitVal(int val, int bitpos, int flag) {
+		int mask = (1 << bitpos);
+
+		if (flag == 0)
+			return val & ~mask;
+		else
+			return val | mask;
 	}
 }
