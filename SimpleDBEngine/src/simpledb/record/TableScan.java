@@ -32,6 +32,10 @@ public class TableScan implements UpdateScan {
 	public void beforeFirst() {
 		moveToBlock(0);
 	}
+	
+	public void afterLast() {
+		moveToBlock(tx.size(filename), true);
+	}
 
 	public boolean next() {
 		currentslot = rp.nextAfter(currentslot);
@@ -40,6 +44,17 @@ public class TableScan implements UpdateScan {
 				return false;
 			moveToBlock(rp.block().number() + 1);
 			currentslot = rp.nextAfter(currentslot);
+		}
+		return true;
+	}
+
+	public boolean previous() {
+		currentslot = rp.nextBefore(currentslot);
+		while (currentslot < 0) {
+			if (atFirstBlock())
+				return false;
+			moveToBlock(rp.block().number() - 1, true);
+			currentslot = rp.nextBefore(currentslot);
 		}
 		return true;
 	}
@@ -113,11 +128,19 @@ public class TableScan implements UpdateScan {
 
 	// Private auxiliary methods
 
-	private void moveToBlock(int blknum) {
+	private void moveToBlock(int blknum, boolean reversed) {
 		close();
 		BlockId blk = new BlockId(filename, blknum);
 		rp = new RecordPage(tx, blk, layout);
-		currentslot = -1;
+		if (reversed) {
+			currentslot = rp.slots();
+		} else {			
+			currentslot = -1;
+		}
+	}
+	
+	private void moveToBlock(int blknum) {
+		moveToBlock(blknum, false);
 	}
 
 	private void moveToNewBlock() {
@@ -130,5 +153,9 @@ public class TableScan implements UpdateScan {
 
 	private boolean atLastBlock() {
 		return rp.block().number() == tx.size(filename) - 1;
+	}
+
+	private boolean atFirstBlock() {
+		return rp.block().number() == 0;
 	}
 }
