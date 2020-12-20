@@ -20,17 +20,26 @@ public class TableScanTest {
 		System.out.println("Filling the table with 50 random records.");
 		TableScan ts = new TableScan(tx, "T", layout);
 		for (int i = 0; i < 50; i++) {
-			ts.insert();
-			int n = (int) Math.round(Math.random() * 50);
-			ts.setInt("A", n);
-			ts.setString("B", "rec" + n);
-			System.out.println("inserting into slot " + ts.getRid() + ": {" + n + ", " + "rec" + n + "}");
+			if (i % 10 == 0) {
+				ts.insert();
+				int n = (int) Math.round(Math.random() * 50);
+				ts.setInt("A", n);
+				ts.setString("B", "rec" + n);
+				ts.setNull("B");
+				System.out.println("inserting into slot " + ts.getRid() + ": {" + n + ", " + "rec" + n + "}");
+			} else {
+				ts.insert();
+				int n = (int) Math.round(Math.random() * 50);
+				ts.setInt("A", n);
+				ts.setString("B", "rec" + n);
+				System.out.println("inserting into slot " + ts.getRid() + ": {" + n + ", " + "rec" + n + "}");
+			}
 		}
 
 		System.out.println("Deleting these records, whose A-values are less than 25.");
 		int count = 0;
-		ts.beforeFirst();
-		while (ts.next()) {
+		ts.afterLast();
+		while (ts.previous()) {
 			int a = ts.getInt("A");
 			String b = ts.getString("B");
 			if (a < 25) {
@@ -42,11 +51,14 @@ public class TableScanTest {
 		System.out.println(count + " values under 10 were deleted.\n");
 
 		System.out.println("Here are the remaining records.");
-		ts.beforeFirst();
-		while (ts.next()) {
+		ts.afterLast();
+		while (ts.previous()) {
 			int a = ts.getInt("A");
 			String b = ts.getString("B");
-			System.out.println("slot " + ts.getRid() + ": {" + a + ", " + b + "}");
+			if (ts.isNull("B"))
+				System.out.println("slot " + ts.getRid() + ": {" + a + ", " + "Null" + "}");
+			else
+				System.out.println("slot " + ts.getRid() + ": {" + a + ", " + b + "}");
 		}
 		ts.close();
 		tx.commit();
