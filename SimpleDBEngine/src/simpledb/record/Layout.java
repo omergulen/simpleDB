@@ -14,6 +14,7 @@ import simpledb.file.Page;
 public class Layout {
 	private Schema schema;
 	private Map<String, Integer> offsets;
+	private Map<String, Integer> bitPositions;
 	private int slotsize;
 
 	/**
@@ -27,10 +28,14 @@ public class Layout {
 	public Layout(Schema schema) {
 		this.schema = schema;
 		offsets = new HashMap<>();
+		bitPositions = new HashMap<>();
 		int pos = Integer.BYTES; // leave space for the empty/inuse flag
+		int bitPosition = 1;
 		for (String fldname : schema.fields()) {
 			offsets.put(fldname, pos);
+			bitPositions.put(fldname, bitPosition);
 			pos += lengthInBytes(fldname);
+			bitPosition++;
 		}
 		slotsize = pos;
 	}
@@ -48,6 +53,11 @@ public class Layout {
 		this.schema = schema;
 		this.offsets = offsets;
 		this.slotsize = slotsize;
+		int bitPosition = 1;
+		for (String fldname : schema.fields()) {
+			bitPositions.put(fldname, bitPosition);
+			bitPosition++;
+		}
 	}
 
 	/**
@@ -67,6 +77,10 @@ public class Layout {
 	 */
 	public int offset(String fldname) {
 		return offsets.get(fldname);
+	}
+	
+	public int bitPosition(String fldname) {
+		return bitPositions.get(fldname);
 	}
 
 	/**
