@@ -11,6 +11,8 @@ import simpledb.record.*;
  */
 public class Term {
 	private Expression lhs, rhs;
+	private int operator = -1;
+	public static final int EQ = 0, LT = 1, GT = 2, ISNULL = 3;
 
 	/**
 	 * Create a new term that compares two expressions for equality.
@@ -19,8 +21,17 @@ public class Term {
 	 * @param rhs the RHS expression
 	 */
 	public Term(Expression lhs, Expression rhs) {
+		this(lhs, rhs, EQ);
+	}
+
+	public Term(Expression lhs, int operator) {
+		this(lhs, null, operator);
+	}
+
+	public Term(Expression lhs, Expression rhs, int operator) {
 		this.lhs = lhs;
 		this.rhs = rhs;
+		this.operator = operator;
 	}
 
 	/**
