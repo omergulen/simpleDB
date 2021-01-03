@@ -1,6 +1,6 @@
 package simpledb.record;
 
-import static java.sql.Types.INTEGER;
+import static java.sql.Types.*;
 import simpledb.file.BlockId;
 import simpledb.query.*;
 import simpledb.tx.Transaction;
@@ -70,8 +70,10 @@ public class TableScan implements UpdateScan {
 	public Constant getVal(String fldname) {
 		if (layout.schema().type(fldname) == INTEGER)
 			return new Constant(getInt(fldname));
-		else
+		else if (layout.schema().type(fldname) == VARCHAR)
 			return new Constant(getString(fldname));
+		else
+			return new Constant();
 	}
 
 	public boolean hasField(String fldname) {
@@ -94,10 +96,15 @@ public class TableScan implements UpdateScan {
 	}
 
 	public void setVal(String fldname, Constant val) {
-		if (layout.schema().type(fldname) == INTEGER)
-			setInt(fldname, val.asInt());
-		else
-			setString(fldname, val.asString());
+		if (val.isNull()) {
+			setNull(fldname);
+		} else {
+			if (layout.schema().type(fldname) == INTEGER)
+				setInt(fldname, val.asInt());
+			else
+				setString(fldname, val.asString());
+		}
+
 	}
 
 	public void insert() {
