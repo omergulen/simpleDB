@@ -150,7 +150,7 @@ public class Term {
 	 * @return true if both expressions apply to the schema
 	 */
 	public boolean appliesTo(Schema sch) {
-		return lhs.appliesTo(sch) && rhs.appliesTo(sch);
+		return lhs.appliesTo(sch) && (operator == ISNULL || rhs.appliesTo(sch));
 	}
 
 	public String toString() {
