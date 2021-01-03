@@ -154,6 +154,26 @@ public class Term {
 	}
 
 	public String toString() {
-		return lhs.toString() + "=" + rhs.toString();
+		StringBuilder sb = new StringBuilder();
+		sb.append(lhs.toString());
+		switch (operator) {
+		case EQ:
+			sb.append(" = ");
+			break;
+		case LT:
+			sb.append(" < ");
+			break;
+		case GT:
+			sb.append(" > ");
+			break;
+		case ISNULL:
+			sb.append(" is null");
+			return sb.toString();
+		default:
+			return sb.toString();
+		}
+
+		sb.append(rhs.toString());
+		return sb.toString();
 	}
 }
