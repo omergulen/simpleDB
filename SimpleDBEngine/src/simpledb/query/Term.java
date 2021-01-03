@@ -88,11 +88,19 @@ public class Term {
 			rhsName = rhs.asFieldName();
 			return p.distinctValues(rhsName);
 		}
-		// otherwise, the term equates constants
-		if (lhs.asConstant().equals(rhs.asConstant()))
+
+		switch (operator) {
+		case EQ:
 			return 1;
-		else
+		case LT:
+		case GT:
+			return 2;
+		case ISNULL:
+			return 10;
+		default:
 			return Integer.MAX_VALUE;
+		}
+
 	}
 
 	/**
