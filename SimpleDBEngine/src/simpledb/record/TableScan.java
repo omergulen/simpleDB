@@ -32,7 +32,7 @@ public class TableScan implements UpdateScan {
 	public void beforeFirst() {
 		moveToBlock(0);
 	}
-	
+
 	public void afterLast() {
 		moveToBlock(tx.size(filename), true);
 	}
@@ -142,11 +142,11 @@ public class TableScan implements UpdateScan {
 		rp = new RecordPage(tx, blk, layout);
 		if (reversed) {
 			currentslot = rp.slots();
-		} else {			
+		} else {
 			currentslot = -1;
 		}
 	}
-	
+
 	private void moveToBlock(int blknum) {
 		moveToBlock(blknum, false);
 	}
