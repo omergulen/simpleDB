@@ -34,6 +34,8 @@ public class Constant implements Comparable<Constant> {
 	}
 
 	public int compareTo(Constant c) {
+		if (ival == null && sval == null)
+			return -2;
 		return (ival != null) ? ival.compareTo(c.ival) : sval.compareTo(c.sval);
 	}
 
