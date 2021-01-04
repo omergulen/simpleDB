@@ -56,6 +56,10 @@ public class Lexer {
 		return '\'' == (char) tok.ttype;
 	}
 
+	public boolean matchNullConstant() {
+		return matchKeyword("null");
+	}
+	
 	/**
 	 * Returns true if the current token is the specified keyword.
 	 * 
@@ -125,6 +129,12 @@ public class Lexer {
 	 */
 	public void eatKeyword(String w) {
 		if (!matchKeyword(w))
+			throw new BadSyntaxException();
+		nextToken();
+	}
+	
+	public void eatNullConstant() {
+		if (!matchNullConstant())
 			throw new BadSyntaxException();
 		nextToken();
 	}
