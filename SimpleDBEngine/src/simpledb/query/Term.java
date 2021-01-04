@@ -43,23 +43,19 @@ public class Term {
 	 */
 	public boolean isSatisfied(Scan s) {
 		Constant lhsval = lhs.evaluate(s);
-		Constant rhsval = rhs.evaluate(s);
-
-		if (lhsval.isNull() || rhsval.isNull()) {
-			if (operator == ISNULL) {
-				return true;
-			}
-
-			return false;
+		if (operator == ISNULL) {
+			return lhsval.isNull();
 		}
+
+		Constant rhsval = rhs.evaluate(s);
 
 		switch (operator) {
 		case EQ:
 			return rhsval.equals(lhsval);
 		case LT:
-			return lhsval.compareTo(rhsval) < 0;
+			return lhsval.compareTo(rhsval) == -1;
 		case GT:
-			return lhsval.compareTo(rhsval) > 0;
+			return lhsval.compareTo(rhsval) == 1;
 		default:
 			return false;
 		}
