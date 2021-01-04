@@ -33,10 +33,6 @@ public class TableScan implements UpdateScan {
 		moveToBlock(0);
 	}
 
-	public void afterLast() {
-		moveToBlock(tx.size(filename), true);
-	}
-
 	public boolean next() {
 		currentslot = rp.nextAfter(currentslot);
 		while (currentslot < 0) {
@@ -48,16 +44,16 @@ public class TableScan implements UpdateScan {
 		return true;
 	}
 
-	public boolean previous() {
-		currentslot = rp.nextBefore(currentslot);
-		while (currentslot < 0) {
-			if (atFirstBlock())
-				return false;
-			moveToBlock(rp.block().number() - 1, true);
-			currentslot = rp.nextBefore(currentslot);
-		}
-		return true;
+	// Assignment 5 methods
+	// Part 2
+	public boolean isNull(String fldname) {
+		return rp.isNull(currentslot, fldname);
 	}
+
+	public void setNull(String fldname) {
+		rp.setNull(currentslot, fldname);
+	}
+	// End of Assignment 5 methods
 
 	public int getInt(String fldname) {
 		return rp.getInt(currentslot, fldname);
@@ -68,12 +64,14 @@ public class TableScan implements UpdateScan {
 	}
 
 	public Constant getVal(String fldname) {
-		if (layout.schema().type(fldname) == INTEGER)
-			return new Constant(getInt(fldname));
-		else if (layout.schema().type(fldname) == VARCHAR)
-			return new Constant(getString(fldname));
-		else
+		if (isNull(fldname)) {
 			return new Constant();
+		} else {
+			if (layout.schema().type(fldname) == INTEGER)
+				return new Constant(getInt(fldname));
+			else
+				return new Constant(getString(fldname));
+		}
 	}
 
 	public boolean hasField(String fldname) {
@@ -133,29 +131,13 @@ public class TableScan implements UpdateScan {
 		return new RID(rp.block().number(), currentslot);
 	}
 
-	public boolean isNull(String fldname) {
-		return rp.isNull(currentslot, fldname);
-	}
-
-	public void setNull(String fldname) {
-		rp.setNull(currentslot, fldname);
-	}
-
 	// Private auxiliary methods
 
-	private void moveToBlock(int blknum, boolean reversed) {
+	private void moveToBlock(int blknum) {
 		close();
 		BlockId blk = new BlockId(filename, blknum);
 		rp = new RecordPage(tx, blk, layout);
-		if (reversed) {
-			currentslot = rp.slots();
-		} else {
-			currentslot = -1;
-		}
-	}
-
-	private void moveToBlock(int blknum) {
-		moveToBlock(blknum, false);
+		currentslot = -1;
 	}
 
 	private void moveToNewBlock() {
@@ -168,9 +150,5 @@ public class TableScan implements UpdateScan {
 
 	private boolean atLastBlock() {
 		return rp.block().number() == tx.size(filename) - 1;
-	}
-
-	private boolean atFirstBlock() {
-		return rp.block().number() == 0;
 	}
 }
