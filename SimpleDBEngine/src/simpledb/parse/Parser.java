@@ -26,7 +26,10 @@ public class Parser {
 	public Constant constant() {
 		if (lex.matchStringConstant())
 			return new Constant(lex.eatStringConstant());
-		else
+		else if (lex.matchNullConstant()) {
+			lex.eatNullConstant();
+			return new Constant();
+		} else
 			return new Constant(lex.eatIntConstant());
 	}
 
@@ -37,11 +40,41 @@ public class Parser {
 			return new Expression(constant());
 	}
 
+	public int operator() {
+		char[] delims = { '=', '<', '>' };
+		int index = 0;
+		for (char c : delims) {
+			if (lex.matchDelim(c)) {
+				lex.eatDelim(c);
+				return index;
+			}
+			index++;
+		}
+
+		if (lex.matchKeyword("is")) {
+			lex.eatKeyword("is");
+			if (lex.matchKeyword("null")) {				
+				lex.eatKeyword("null");
+				return 3;
+			}
+			return -1;
+		}
+
+		return -1;
+	}
+
 	public Term term() {
 		Expression lhs = expression();
-		lex.eatDelim('=');
-		Expression rhs = expression();
-		return new Term(lhs, rhs);
+		int op = operator();
+		if (op < 0) {
+			throw new BadSyntaxException();
+		}
+		if (op != 3) {			
+			Expression rhs = expression();
+			return new Term(lhs, rhs, op);
+		}
+		
+		return new Term(lhs, op); // is null constructor
 	}
 
 	public Predicate predicate() {
