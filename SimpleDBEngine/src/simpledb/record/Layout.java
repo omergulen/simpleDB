@@ -1,8 +1,10 @@
 package simpledb.record;
 
 import java.util.*;
-import static java.sql.Types.*;
+
 import simpledb.file.Page;
+
+import static java.sql.Types.*;
 
 /**
  * Description of the structure of a record. It contains the name, type, length
@@ -14,8 +16,12 @@ import simpledb.file.Page;
 public class Layout {
 	private Schema schema;
 	private Map<String, Integer> offsets;
-	private Map<String, Integer> bitPositions;
 	private int slotsize;
+
+	// Assignment 5 Definitions
+	// Part 2
+	private Map<String, Integer> bitPositions;
+	//
 
 	/**
 	 * This constructor creates a Layout object from a schema. This constructor is
@@ -30,12 +36,12 @@ public class Layout {
 		offsets = new HashMap<>();
 		bitPositions = new HashMap<>();
 		int pos = Integer.BYTES; // leave space for the empty/inuse flag
-		int bitPosition = 1;
+		int bitPos = 1;
 		for (String fldname : schema.fields()) {
 			offsets.put(fldname, pos);
-			bitPositions.put(fldname, bitPosition);
+			bitPositions.put(fldname, bitPos);
 			pos += lengthInBytes(fldname);
-			bitPosition++;
+			bitPos++;
 		}
 		slotsize = pos;
 	}
@@ -53,10 +59,11 @@ public class Layout {
 		this.schema = schema;
 		this.offsets = offsets;
 		this.slotsize = slotsize;
-		int bitPosition = 1;
+		bitPositions = new HashMap<>();
+		int bitPos = 1;
 		for (String fldname : schema.fields()) {
-			bitPositions.put(fldname, bitPosition);
-			bitPosition++;
+			bitPositions.put(fldname, bitPos);
+			bitPos++;
 		}
 	}
 
@@ -78,10 +85,6 @@ public class Layout {
 	public int offset(String fldname) {
 		return offsets.get(fldname);
 	}
-	
-	public int bitPosition(String fldname) {
-		return bitPositions.get(fldname);
-	}
 
 	/**
 	 * Return the size of a slot, in bytes.
@@ -99,4 +102,11 @@ public class Layout {
 		else // fldtype == VARCHAR
 			return Page.maxLength(schema.length(fldname));
 	}
+
+	// Assignment 5 methods
+	// Part 2
+	public int bitPosition(String fldname) {
+		return bitPositions.get(fldname);
+	}
+	// End of Assignment 5 methods
 }
