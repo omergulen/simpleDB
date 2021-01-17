@@ -33,6 +33,10 @@ public class TableScan implements UpdateScan {
 		moveToBlock(0);
 	}
 
+	public void afterLast() {
+		moveToBlock(tx.size(filename), true);
+	}
+
 	public boolean next() {
 		currentslot = rp.nextAfter(currentslot);
 		while (currentslot < 0) {
@@ -43,6 +47,28 @@ public class TableScan implements UpdateScan {
 		}
 		return true;
 	}
+
+	public boolean previous() {
+		currentslot = rp.nextBefore(currentslot);
+		while (currentslot < 0) {
+			if (atFirstBlock())
+				return false;
+			moveToBlock(rp.block().number() - 1, true);
+			currentslot = rp.nextBefore(currentslot);
+		}
+		return true;
+	}
+
+	// Assignment 5 methods
+	// Part 2
+	public boolean isNull(String fldname) {
+		return rp.isNull(currentslot, fldname);
+	}
+
+	public void setNull(String fldname) {
+		rp.setNull(currentslot, fldname);
+	}
+	// End of Assignment 5 methods
 
 	public int getInt(String fldname) {
 		return rp.getInt(currentslot, fldname);
@@ -113,13 +139,6 @@ public class TableScan implements UpdateScan {
 
 	// Private auxiliary methods
 
-	private void moveToBlock(int blknum) {
-		close();
-		BlockId blk = new BlockId(filename, blknum);
-		rp = new RecordPage(tx, blk, layout);
-		currentslot = -1;
-	}
-
 	private void moveToNewBlock() {
 		close();
 		BlockId blk = tx.append(filename);
@@ -128,7 +147,26 @@ public class TableScan implements UpdateScan {
 		currentslot = -1;
 	}
 
+	private void moveToBlock(int blknum, boolean reversed) {
+		close();
+		BlockId blk = new BlockId(filename, blknum);
+		rp = new RecordPage(tx, blk, layout);
+		if (reversed) {
+			currentslot = rp.slots();
+		} else {
+			currentslot = -1;
+		}
+	}
+
+	private void moveToBlock(int blknum) {
+		moveToBlock(blknum, false);
+	}
+
 	private boolean atLastBlock() {
 		return rp.block().number() == tx.size(filename) - 1;
+	}
+
+	private boolean atFirstBlock() {
+		return rp.block().number() == 0;
 	}
 }

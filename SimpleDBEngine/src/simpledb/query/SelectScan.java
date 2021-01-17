@@ -3,10 +3,9 @@ package simpledb.query;
 import simpledb.record.*;
 
 /**
- * The scan class corresponding to the <i>select</i> relational
- * algebra operator.
- * All methods except next delegate their work to the
- * underlying scan.
+ * The scan class corresponding to the <i>select</i> relational algebra
+ * operator. All methods except next delegate their work to the underlying scan.
+ * 
  * @author Edward Sciore
  */
 public class SelectScan implements UpdateScan {
@@ -14,9 +13,9 @@ public class SelectScan implements UpdateScan {
 	private Predicate pred;
 
 	/**
-	 * Create a select scan having the specified underlying
-	 * scan and predicate.
-	 * @param s the scan of the underlying query
+	 * Create a select scan having the specified underlying scan and predicate.
+	 * 
+	 * @param s    the scan of the underlying query
 	 * @param pred the selection predicate
 	 */
 	public SelectScan(Scan s, Predicate pred) {
@@ -38,6 +37,22 @@ public class SelectScan implements UpdateScan {
 		return false;
 	}
 
+	public void afterLast() {
+		s.afterLast();
+	}
+
+	public boolean previous() {
+		while (s.previous()) {
+			if (pred.isSatisfied(s))
+				return true;
+		}
+		return false;
+	}
+
+	public boolean isNull(String fldname) {
+		return s.isNull(fldname);
+	}
+
 	public int getInt(String fldname) {
 		return s.getInt(fldname);
 	}
@@ -46,17 +61,17 @@ public class SelectScan implements UpdateScan {
 		return s.getString(fldname);
 	}
 
-   public Constant getVal(String fldname) {
-      return s.getVal(fldname);
-   }
+	public Constant getVal(String fldname) {
+		return s.getVal(fldname);
+	}
 
 	public boolean hasField(String fldname) {
 		return s.hasField(fldname);
 	}
 
-   public void close() {
-      s.close();
-   }
+	public void close() {
+		s.close();
+	}
 
 	// UpdateScan methods
 
@@ -70,10 +85,10 @@ public class SelectScan implements UpdateScan {
 		us.setString(fldname, val);
 	}
 
-   public void setVal(String fldname, Constant val) {
-      UpdateScan us = (UpdateScan) s;
-      us.setVal(fldname, val);
-   }
+	public void setVal(String fldname, Constant val) {
+		UpdateScan us = (UpdateScan) s;
+		us.setVal(fldname, val);
+	}
 
 	public void delete() {
 		UpdateScan us = (UpdateScan) s;
